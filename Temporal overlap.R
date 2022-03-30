@@ -1,5 +1,10 @@
+library(song)
 
+birds <- song.FromDataObj(wrens) # use song.FromTextFile() for text files
 
+rndbirds <- song.Simulate(birds)
+
+song.Summarize(rndbirds)
 # For all dates/times
 
 # Observed = amount of time (s) both species called together
@@ -13,6 +18,12 @@ AllHornBillData <- read.csv('KennedyEtAlHornBillData.csv')
 
 # Check the structure of the resulting data
 head(AllHornBillData)
+
+Hour.dataframe <- (table(AllHornBillData$Recorder,AllHornBillData$Date))
+
+Hour.dataframe[Hour.dataframe > 0] <- 1 
+rowSums(Hour.dataframe)*24
+
 
 # Create a new column that has only the hour in which calls were detected
 AllHornBillData$Hour = str_split_fixed(AllHornBillData$Start.time,
@@ -99,6 +110,8 @@ CombineCallsActual <- rbind.data.frame(OverlapTrue,CallAfter)
 CombineCallsActual[order(CombineCallsActual$Start.time),]
 
 sum(CombineCallsActual$DurationOverlap)
+
+
 
 # Loop to randomize 
 
@@ -210,4 +223,16 @@ print(OverlapValue)
 
 library(ggpubr)
 SimOverlapVals <- unlist(SimOverlapList)
-ggdensity(data=SimOverlapVals) + geom_vline(xintercept = sum((CombineCallsActual$DurationOverlap)), col='red' )+xlim(500,3500)
+ggdensity(data=SimOverlapVals, add=c('median'), fill='lightgrey') + 
+  geom_vline(xintercept = sum((CombineCallsActual$DurationOverlap)), col='red' )+
+  xlim(500,3500)+
+  xlab('Duration overlap (s)') + ylab('Density')
+
+(na.omit(SimOverlapVals))/sum((CombineCallsActual$DurationOverlap))
+
+median((na.omit(SimOverlapVals)))
+# Calculate p-value 
+ExpectedVsObserved <- (na.omit(SimOverlapVals)) >= sum((CombineCallsActual$DurationOverlap))
+p.values <- sum(ExpectedVsObserved)
+p.values/500
+
